@@ -29,7 +29,7 @@ class AzureFormRecognizerClient:
             endpoint=self.form_recognizer_endpoint, credential=AzureKeyCredential(self.form_recognizer_key)
         )
       
-      poller = document_analysis_client.begin_analyze_document("prebuilt-receipt", document, pages="2-6")
+      poller = document_analysis_client.begin_analyze_document("prebuilt-receipt", document)#, pages="2-6")
       result = poller.result()
 
       page_values = []
@@ -54,6 +54,9 @@ class AzureFormRecognizerClient:
                 
                 item_quantity = item.value.get("Quantity")
                 row['Quantity'] = item_quantity.value if item_quantity else ""
+
+                quantity_unit = item.value.get("QuantityUnit")
+                row['QuantityUnit'] = quantity_unit.value if quantity_unit else ""
                 
                 item_price = item.value.get("Price")
                 row['Price'] = item_price.value if item_price else ""

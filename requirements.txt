@@ -1,3 +1,4 @@
 streamlit
 azure-ai-formrecognizer
 pymysql
+python-dotenv

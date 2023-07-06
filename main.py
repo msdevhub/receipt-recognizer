@@ -2,16 +2,34 @@ import streamlit as st
 import os
 import pandas as pd
 from formrecognizer import AzureFormRecognizerClient
-from db import get_pdf_files, get_receipt_items_by_pdf_id, insert_data_to_mysql, get_receipts_by_pdf_id, get_receipt_items_by_receipt_id
+from db import PDFDatabase
+import base64
 
 pdf_parser = AzureFormRecognizerClient()
+database = PDFDatabase()
+database.create_tables()
+
+def upload_file(file):
+    # 显示正在上传的状态
+    with st.spinner("正在上传文件..."):
+        # 将上传的文件保存到data目录中
+        with open(os.path.join("./data", file.name), "wb") as f:
+            file_value = file.getvalue()
+            values = pdf_parser.analyze_read(file_value)
+            database.insert_data_to_mysql(values, file.name, os.path.join("./data", file.name))
+            f.write(file_value)
+    
+    # 显示上传成功消息
+    st.sidebar.write("文件上传成功")
+    # 更新侧边栏中的文件列表
+    st.experimental_rerun()
 
 def main():
     st.set_page_config(page_title="上传和显示表格", layout="wide")
-    st.sidebar.title("侧边栏")
+    # st.sidebar.title("侧边栏")
 
     # 获取PDF文件列表
-    files = get_pdf_files()
+    files = database.get_pdf_files()
 
     # 显示文件列表
     st.sidebar.subheader("上传的文件列表")
@@ -25,11 +43,18 @@ def main():
         st.sidebar.write(f"选择的文件：{selected_file}，{selected_file_id}")
 
         # 获取选择文件的收据信息和收据项信息
-        receipts = get_receipts_by_pdf_id(selected_file_id)
-        receipt_items = get_receipt_items_by_pdf_id(selected_file_id)
+        receipts = database.get_receipts_by_pdf_id(selected_file_id)
+        receipt_items = database.get_receipt_items_by_pdf_id(selected_file_id)
+
+        # 显示收据统计信息，包括收据数量、收据项数量、总金额
+        st.title("收据统计信息")
+        st.write(f"收据数量：{len(receipts)}")
+        st.write(f"收据项数量：{len(receipt_items)}")
+        st.write(f"总金额：{sum([receipt[8] for receipt in receipts])}")
+
 
         # 显示收据信息
-        st.write("收据信息：")
+        st.subheader("收据信息：")
         if len(receipts) == 0:
             st.write("没有找到收据信息")
         else:
@@ -37,29 +62,32 @@ def main():
             st.table(receipts_df)
 
         # 显示收据项信息
-        st.write("收据项信息：")
+        st.subheader("收据项信息：")
         if len(receipt_items) == 0:
             st.write("没有找到收据项信息")
         else:
-            receipt_items_df = pd.DataFrame(receipt_items, columns=["ID","PDF ID", "Receipt ID", "Description", "Quantity", "Price", "Total Price"])
+            receipt_items_df = pd.DataFrame(receipt_items, columns=["ID","PDF", "Receipt","TransactionDate", "Description", "Quantity", "QuantityUnit", "Price", "Total Price"])
             st.table(receipt_items_df)
 
-    # 上传文件
-    st.sidebar.subheader("选择要上传的文件")
-    uploaded_file = st.sidebar.file_uploader("上传PDF文件", type=["pdf", "jpg", "jpeg"])
-    if uploaded_file is not None:
-        # 检查文件名是否已存在
-        if uploaded_file.name in files:
-            st.sidebar.write("文件名已存在，请重新命名文件")
-        else:
-            # 将上传的文件保存到data目录中
-            with open(os.path.join("./data", uploaded_file.name), "wb") as f:
-                file_value = uploaded_file.getvalue()
-                values = pdf_parser.analyze_read(file_value)
-                insert_data_to_mysql(values, uploaded_file.name, os.path.join("./data", uploaded_file.name))
-                f.write(file_value)
-            # 自动刷新侧边栏中的文件列表
-            st.experimental_rerun()
+
+        # 显示选中的PDF文件
+        st.subheader("PDF预览")
+        with open(os.path.join("./data", selected_file), "rb") as f:
+            pdf_data = f.read()
+        b64_pdf = base64.b64encode(pdf_data).decode("utf-8")
+        pdf_file_name = os.path.splitext(selected_file)[0]
+        download_link = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_file_name}.pdf">点击此处下载PDF文件</a>'
+        st.markdown(download_link, unsafe_allow_html=True)
+        st.write(f'<iframe src="data:application/pdf;base64,{b64_pdf}" width="100%" height="600px" style="border: none;"></iframe>', unsafe_allow_html=True)
+
+
+    with st.sidebar.form("upload_form"):
+        st.subheader("选择要上传的文件")
+        uploaded_file = st.file_uploader("上传PDF文件", type=["pdf", "jpg", "jpeg"])
+        submit_button = st.form_submit_button("上传")
+
+        if submit_button and uploaded_file is not None:
+            upload_file(uploaded_file)
 
 if __name__ == '__main__':
     main()
