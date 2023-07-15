@@ -139,7 +139,7 @@ class PDFDatabase:
                     pdf_id,
                     data.get("ReceiptType"),
                     data.get("MerchantName"),
-                    data.get("TransactionDate"),
+                    data.get("TransactionDate") if data.get("TransactionDate") != "" else None,
                     data.get("Subtotal", 0) if data.get("Subtotal") != "" else 0,
                     data.get("TotalTax", 0) if data.get("TotalTax") != "" else 0,
                     data.get("Tip", 0) if data.get("Tip") != "" else 0,
