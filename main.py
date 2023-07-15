@@ -71,14 +71,14 @@ def main():
 
 
         # 显示选中的PDF文件
-        st.subheader("PDF预览")
-        with open(os.path.join("./data", selected_file), "rb") as f:
-            pdf_data = f.read()
-        b64_pdf = base64.b64encode(pdf_data).decode("utf-8")
-        pdf_file_name = os.path.splitext(selected_file)[0]
-        download_link = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_file_name}.pdf">点击此处下载PDF文件</a>'
-        st.markdown(download_link, unsafe_allow_html=True)
-        st.write(f'<iframe src="data:application/pdf;base64,{b64_pdf}" width="100%" height="600px" style="border: none;"></iframe>', unsafe_allow_html=True)
+        # st.subheader("PDF预览")
+        # with open(os.path.join("./data", selected_file), "rb") as f:
+        #     pdf_data = f.read()
+        # b64_pdf = base64.b64encode(pdf_data).decode("utf-8")
+        # pdf_file_name = os.path.splitext(selected_file)[0]
+        # download_link = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{pdf_file_name}.pdf">点击此处下载PDF文件</a>'
+        # st.markdown(download_link, unsafe_allow_html=True)
+        # st.write(f'<iframe src="data:application/pdf;base64,{b64_pdf}" width="100%" height="600px" style="border: none;"></iframe>', unsafe_allow_html=True)
 
 
     with st.sidebar.form("upload_form"):
