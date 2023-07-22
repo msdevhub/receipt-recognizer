@@ -13,9 +13,10 @@ class PDFDatabase:
         )
 
     def __del__(self):
-        self.connection.close()
+        print('self.connection.close()')
 
     def create_tables(self):
+        self.connection.connect()
         cursor = self.connection.cursor()
 
         create_pdfs_table_query = """
@@ -60,31 +61,37 @@ class PDFDatabase:
         cursor.execute(create_items_table_query)
 
         cursor.close()
+        self.connection.close()
 
     def get_pdf_files(self):
         """
         获取PDF文件列表
         """
+        self.connection.connect()
         cursor = self.connection.cursor()
         query_files = "SELECT id, filename FROM pdfs"
         cursor.execute(query_files)
         result = cursor.fetchall()
         files = [(row[1], row[0]) for row in result]
         cursor.close()
+        self.connection.close()
         return files
 
     def get_receipts_by_pdf_id(self, pdf_id):
         """
         根据 PDF ID 获取收据信息列表
         """
+        self.connection.connect()
         cursor = self.connection.cursor()
         query_receipts = "SELECT * FROM receipts WHERE pdf_id = %s"
         cursor.execute(query_receipts, (pdf_id,))
         result = cursor.fetchall()
         cursor.close()
+        self.connection.close()
         return result
 
     def get_receipt_items_by_pdf_id(self, pdf_id):
+        self.connection.connect()
         cursor = self.connection.cursor()
         query = """
         SELECT ri.id, p.filename, r.MerchantName, r.TransactionDate, ri.Description, ri.Quantity, ri.QuantityUnit, ri.Price, ri.TotalPrice
@@ -96,20 +103,24 @@ class PDFDatabase:
         cursor.execute(query, (pdf_id,))
         receipt_items = cursor.fetchall()
         cursor.close()
+        self.connection.close()
         return receipt_items
 
     def get_receipt_items_by_receipt_id(self, receipt_id):
         """
         根据收据 ID 获取收据项信息列表
         """
+        self.connection.connect()
         cursor = self.connection.cursor()
         query_receipt_items = "SELECT * FROM receipt_items WHERE receipt_id = %s"
         cursor.execute(query_receipt_items, (receipt_id,))
         result = cursor.fetchall()
         cursor.close()
+        self.connection.close()
         return result
 
     def insert_data_to_mysql(self, data_list, pdf_filename, pdf_filepath):
+        self.connection.connect()
         cursor = self.connection.cursor()
         check_pdf_query = """
         SELECT id FROM pdfs WHERE filename = %s
@@ -171,3 +182,4 @@ class PDFDatabase:
 
         self.connection.commit()
         cursor.close()
+        self.connection.close()

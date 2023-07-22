@@ -9,6 +9,8 @@ pdf_parser = AzureFormRecognizerClient()
 database = PDFDatabase()
 database.create_tables()
 
+# print("Analyze Layouts...",os.getenv('DB_HOST'),  os.getenv('DB_PORT'), os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASSWORD'))
+
 def upload_file(file):
     # 显示正在上传的状态
     with st.spinner("正在上传文件..."):
@@ -50,7 +52,7 @@ def main():
         st.title("收据统计信息")
         st.write(f"收据数量：{len(receipts)}")
         st.write(f"收据项数量：{len(receipt_items)}")
-        st.write(f"总金额：{sum([receipt[8] for receipt in receipts])}")
+        # st.write(f"总金额：{sum([receipt[8] if receipt[0] else 0 for receipt in receipts])}")
 
 
         # 显示收据信息

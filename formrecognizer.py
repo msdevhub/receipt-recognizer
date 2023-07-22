@@ -24,7 +24,6 @@ class AzureFormRecognizerClient:
 
 
     def analyze_read(self, document):
-
       document_analysis_client = DocumentAnalysisClient(
             endpoint=self.form_recognizer_endpoint, credential=AzureKeyCredential(self.form_recognizer_key)
         )
