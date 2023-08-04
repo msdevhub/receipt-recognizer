@@ -6,6 +6,7 @@ To learn more, please visit the documentation - Quickstart: Form Recognizer Pyth
 https://docs.microsoft.com/en-us/azure/applied-ai-services/form-recognizer/quickstarts/try-v3-python-sdk
 """
 
+import json
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 import os
@@ -31,11 +32,13 @@ class AzureFormRecognizerClient:
       poller = document_analysis_client.begin_analyze_document("prebuilt-receipt", document)#, pages="2-6")
       result = poller.result()
 
-      page_values = []
+      page_values = [result.content]
       for idx, receipt in enumerate(result.documents):
         value = {}
         receipt_type = receipt.doc_type
         value['ReceiptType'] = receipt_type if receipt_type else ""
+
+        value['Content'] = json.dumps(result.pages[idx].to_dict())
         
         merchant_name = receipt.fields.get("MerchantName")
         value['MerchantName'] = merchant_name.value if merchant_name else ""

@@ -18,7 +18,8 @@ def upload_file(file):
         with open(os.path.join("./data", file.name), "wb") as f:
             file_value = file.getvalue()
             values = pdf_parser.analyze_read(file_value)
-            database.insert_data_to_mysql(values, file.name, os.path.join("./data", file.name))
+
+            database.insert_data_to_mysql(values, file.name, os.path.join("./data", file.name)) # insert pdf data from pdf_parser.analyze_read values first row
             f.write(file_value)
     
     # 显示上传成功消息

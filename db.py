@@ -13,6 +13,7 @@ class PDFDatabase:
         )
 
     def __del__(self):
+        self.connection.close()
         print('self.connection.close()')
 
     def create_tables(self):
@@ -24,6 +25,7 @@ class PDFDatabase:
           id INT PRIMARY KEY AUTO_INCREMENT,
           filename VARCHAR(255),
           filepath VARCHAR(255),
+          content LONGTEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
@@ -40,6 +42,7 @@ class PDFDatabase:
           TotalTax DECIMAL(10, 2),
           Tip DECIMAL(10, 2),
           Total DECIMAL(10, 2),
+          Content LONGTEXT,
           FOREIGN KEY (pdf_id) REFERENCES pdfs(id)
         )
         """
@@ -83,7 +86,8 @@ class PDFDatabase:
         """
         self.connection.connect()
         cursor = self.connection.cursor()
-        query_receipts = "SELECT * FROM receipts WHERE pdf_id = %s"
+        
+        query_receipts = "SELECT id,pdf_id, ReceiptType,MerchantName,TransactionDate, Subtotal, TotalTax, Tip ,Total  FROM receipts WHERE pdf_id = %s"
         cursor.execute(query_receipts, (pdf_id,))
         result = cursor.fetchall()
         cursor.close()
@@ -133,16 +137,21 @@ class PDFDatabase:
             raise ValueError(f"PDF file '{pdf_filename}' already exists.")
 
         insert_pdf_query = """
-        INSERT INTO pdfs (filename,filepath)
-        VALUES (%s, %s)
+        INSERT INTO pdfs (filename,filepath,content)
+        VALUES (%s, %s, %s)
         """
-        cursor.execute(insert_pdf_query, (pdf_filename, pdf_filepath))
+        cursor.execute(insert_pdf_query, (pdf_filename, pdf_filepath, data_list[0]))
         pdf_id = cursor.lastrowid
 
-        for data in data_list:
+        if len(data_list) <= 1:
+            cursor.close()
+            self.connection.close()
+            raise ValueError(f"PDF file '{pdf_filename}' has no receipt data.")
+
+        for data in data_list[1:]: # 从第二个元素开始
             insert_receipt_query = """
-            INSERT INTO receipts (pdf_id, ReceiptType, MerchantName, TransactionDate, Subtotal, TotalTax, Tip, Total)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO receipts (pdf_id, ReceiptType, MerchantName, TransactionDate, Subtotal, TotalTax, Tip, Total,Content)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             cursor.execute(
                 insert_receipt_query,
@@ -155,6 +164,7 @@ class PDFDatabase:
                     data.get("TotalTax", 0) if data.get("TotalTax") != "" else 0,
                     data.get("Tip", 0) if data.get("Tip") != "" else 0,
                     data.get("Total", 0) if data.get("Total") != "" else 0,
+                    data.get("Content", 0) if data.get("Content") != "" else 0,
                 ),
             )
             receipt_id = cursor.lastrowid
