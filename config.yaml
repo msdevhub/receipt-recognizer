@@ -1,0 +1,13 @@
+credentials:
+  usernames:
+    lulu:
+      email: michael.keepgoing@gmail.com
+      name: Lulu
+      password: $2b$12$MOcJDbQeWRGKB.Gbh3PlMOz5kZniY712XBArBxX2/ARZJhmzUrrue # Placeholder for hashed password for 'abc' 
+cookie:
+  expiry_days: 30
+  key: $2b$12$MOcJDbQeWRGKB.Gbh3PlMOz5kZniY712XBArBxX2/ARZJhmzUrrue # Must be string
+  name: car_order_identifier
+preauthorized:
+  emails:
+  - michael.keepgoing@gmail.com

@@ -1,0 +1,30 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Docker Login 
+      uses: docker/login-action@v2.1.0
+      with: 
+        # Username used to log against the Docker registry
+        username: restry # optional
+        # Password or personal access token used to log against the Docker registry
+        password: ${{ vars.DOCKER_TOKEN }} #DOCKER_TOKEN optional
+        
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag restry/receipt-rec:latest
+
+    - name: Push Docker image
+      run: docker push restry/receipt-rec:latest

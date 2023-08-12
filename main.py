@@ -5,6 +5,27 @@ from formrecognizer import AzureFormRecognizerClient
 from db import PDFDatabase
 import base64
 
+import yaml
+from yaml.loader import SafeLoader
+import streamlit as st
+import streamlit_authenticator as stauth
+
+# 添加用户界面元素到左侧侧边栏 
+st.set_page_config(page_title="上传和显示表格", layout="wide")
+
+with open('./config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
+
+authenticator = stauth.Authenticate(
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days'],
+    config['preauthorized']
+)
+name, authentication_status, username = authenticator.login('Login', 'main')
+
+
 pdf_parser = AzureFormRecognizerClient()
 database = PDFDatabase()
 database.create_tables()
@@ -28,7 +49,6 @@ def upload_file(file):
     st.experimental_rerun()
 
 def main():
-    st.set_page_config(page_title="上传和显示表格", layout="wide")
     # st.sidebar.title("侧边栏")
 
     # 获取PDF文件列表
@@ -93,4 +113,14 @@ def main():
             upload_file(uploaded_file)
 
 if __name__ == '__main__':
-    main()
+    if authentication_status:
+
+        authenticator.logout('Logout', 'main', key='unique_key')
+        st.write(f'Welcome *{name}*')
+        
+        main()
+    elif authentication_status is False:
+        st.error('Username/password is incorrect')
+    elif authentication_status is None:
+        st.warning('Please enter your username and password')
+
